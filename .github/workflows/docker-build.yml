@@ -1,6 +1,8 @@
 name: Docker build & publish
 on:
   workflow_dispatch:
+  schedule:
+    - cron: '0 3 * * 1'  # Every Monday at 3 AM
 
 env:
   REGISTRY: ghcr.io
