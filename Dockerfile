@@ -22,6 +22,7 @@ USER root
 RUN apk update --no-cache
 COPY --from=build /usr/local/bin/v2ray-plugin /usr/local/bin/v2ray-plugin
 USER nobody
+ENV USER=nobody
 
 ENTRYPOINT [ "docker-entrypoint.sh" ]
 CMD [ "ssserver", "--log-without-time", "-c", "/etc/shadowsocks-rust/config.json" ]
