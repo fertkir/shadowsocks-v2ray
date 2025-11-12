@@ -21,6 +21,7 @@ FROM ghcr.io/shadowsocks/ssserver-rust:latest AS ssserver
 USER root
 RUN apk update --no-cache
 COPY --from=build /usr/local/bin/v2ray-plugin /usr/local/bin/v2ray-plugin
+RUN chmod 644 /etc/shadowsocks-rust/config.json
 USER nobody
 ENV USER=nobody
 
@@ -33,6 +34,7 @@ FROM ghcr.io/shadowsocks/sslocal-rust:latest AS sslocal
 USER root
 RUN apk update --no-cache
 COPY --from=build /usr/local/bin/v2ray-plugin /usr/local/bin/v2ray-plugin
+RUN chmod 644 /etc/shadowsocks-rust/config.json
 USER nobody
 ENV USER=nobody
 
