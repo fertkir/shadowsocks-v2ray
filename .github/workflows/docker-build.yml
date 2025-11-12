@@ -50,5 +50,3 @@ jobs:
           target: ${{ matrix.app }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ github.actor }}/${{ matrix.app }}-cache
-          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ github.actor }}/${{ matrix.app }}-cache,mode=max
