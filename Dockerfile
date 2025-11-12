@@ -16,7 +16,7 @@ RUN TAG=$(cat release_notes.txt | grep tag_name | cut -d '"' -f4) && \
     chmod +x /usr/local/bin/v2ray-plugin
 
 
-FROM ghcr.io/shadowsocks/ssserver-rust:latest
+FROM ghcr.io/shadowsocks/ssserver-rust:latest AS ssserver
 
 USER root
 RUN apk update --no-cache
@@ -26,3 +26,15 @@ ENV USER=nobody
 
 ENTRYPOINT [ "docker-entrypoint.sh" ]
 CMD [ "ssserver", "--log-without-time", "-c", "/etc/shadowsocks-rust/config.json" ]
+
+
+FROM ghcr.io/shadowsocks/sslocal-rust:latest AS sslocal
+
+USER root
+RUN apk update --no-cache
+COPY --from=build /usr/local/bin/v2ray-plugin /usr/local/bin/v2ray-plugin
+USER nobody
+ENV USER=nobody
+
+ENTRYPOINT [ "docker-entrypoint.sh" ]
+CMD [ "sslocal", "--log-without-time", "-c", "/etc/shadowsocks-rust/config.json" ]
