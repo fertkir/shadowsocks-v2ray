@@ -24,7 +24,7 @@ RUN --mount=type=secret,id=github_token  \
     chmod 0755 /usr/local/bin/v2ray-plugin
 
 
-FROM ghcr.io/shadowsocks/ssserver-rust:latest AS ssserver
+FROM ghcr.io/shadowsocks/ssserver-rust:v1.24.0@sha256:85d01da9879b30b0784aea2b5ffceb5234d59cd81082064c08ebb113324e1359 AS ssserver
 
 USER root
 COPY --from=build /usr/local/bin/v2ray-plugin /usr/local/bin/v2ray-plugin
@@ -35,7 +35,7 @@ ENTRYPOINT [ "docker-entrypoint.sh" ]
 CMD [ "ssserver", "--log-without-time", "-c", "/etc/shadowsocks-rust/config.json" ]
 
 
-FROM ghcr.io/shadowsocks/sslocal-rust:latest AS sslocal
+FROM ghcr.io/shadowsocks/sslocal-rust:v1.24.0@sha256:573338c89c79fcbd20d6ffae8a099f84126a86780e01cc30f689430b835342e2 AS sslocal
 
 USER root
 COPY --from=build /usr/local/bin/v2ray-plugin /usr/local/bin/v2ray-plugin
