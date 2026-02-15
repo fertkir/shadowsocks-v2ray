@@ -3,7 +3,7 @@ LABEL stage=builder-ssserver
 
 ARG V2RAY_TAG
 
-RUN --mount=type=secret,id=github_token \
+RUN --mount=type=secret,id=github_token && \
     apt-get update -y && \
     apt-get install -y --no-install-recommends wget jq ca-certificates
 
