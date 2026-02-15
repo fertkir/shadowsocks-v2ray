@@ -64,7 +64,7 @@ jobs:
         id: upstream
         run: |
           base_image="ghcr.io/shadowsocks/${{ matrix.app }}-rust:latest"
-          digest=$(docker manifest inspect $base_image 2>/dev/null | jq -r '.[0].digest // empty')
+          digest=$(docker manifest inspect $base_image 2>/dev/null | jq -r 'if type=="array" then .[0].digest else .config.digest end // empty')
           echo "digest=$digest" >> $GITHUB_OUTPUT
           # Read previous digest from cache
           if [ -f .cache/last_upstream_digest ]; then
