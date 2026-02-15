@@ -8,8 +8,9 @@ RUN apt-get update -y && \
 
 RUN --mount=type=secret,id=github_token  \
     set -eux; \
+    TEMP_TOKEN=$(cat /run/secrets/github_token); \
     wget -qO release.json \
-    --header "Authorization: Bearer $(cat /run/secrets/github_token)" \
+    --header "Authorization: Bearer $TEMP_TOKEN" \
     https://api.github.com/repos/teddysun/v2ray-plugin/releases/tags/${V2RAY_TAG}; \
     ARCHIVE=$(jq -r '.assets[] | select(.name | test("linux-amd64.*\\.tar\\.gz$")) | .name' release.json); \
     URL=$(jq -r '.assets[] | select(.name == "'"$ARCHIVE"'") | .browser_download_url' release.json); \
