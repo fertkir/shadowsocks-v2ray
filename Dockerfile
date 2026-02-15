@@ -13,6 +13,7 @@ RUN set -eux; \
     wget -qO "$ARCHIVE" "$URL"; \
     echo "${V2RAY_SHA256}  $ARCHIVE" | sha256sum -c -; \
     tar -xf "$ARCHIVE"; \
+    rm "$ARCHIVE"; \
     mv v2ray* /usr/local/bin/v2ray-plugin; \
     chmod 0755 /usr/local/bin/v2ray-plugin
 
