@@ -19,9 +19,9 @@ RUN --mount=type=secret,id=github_token  \
     wget -qO "$ARCHIVE" "$URL"; \
     echo "$EXPECTED_SHA256  $ARCHIVE" | sha256sum -c -; \
     tar -xf "$ARCHIVE"; \
+    rm -f "$ARCHIVE" release.json; \
     mv v2ray* /usr/local/bin/v2ray-plugin; \
-    chmod 0755 /usr/local/bin/v2ray-plugin; \
-    rm -f "$ARCHIVE" release.json
+    chmod 0755 /usr/local/bin/v2ray-plugin
 
 
 FROM ghcr.io/shadowsocks/ssserver-rust:latest AS ssserver
