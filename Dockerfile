@@ -1,8 +1,8 @@
 FROM ubuntu:24.04 AS build
 LABEL stage=builder-ssserver
 
-ARG V2RAY_VERSION="v5.41.0"
-ARG V2RAY_SHA256="e0b762776cbf7b02dcfe61efc5280cbfd65c7d46abbd845f4735486cc811c185"
+ARG V2RAY_VERSION="v5.44.1"
+ARG V2RAY_SHA256="6ef25ba95a30459290003dffd67853779c291a5d7aef45f5475517f52806c635"
 
 RUN apt-get update -y && \
     apt-get install -y --no-install-recommends wget ca-certificates
