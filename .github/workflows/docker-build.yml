@@ -3,7 +3,7 @@ name: Docker build & publish
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 3 * * 1'  # Every Monday at 3 AM
+    - cron: '0 3 * * 1' # Every Monday at 3 AM
 
 env:
   REGISTRY: ghcr.io
@@ -29,7 +29,57 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Restore last build info
+        id: cache
+        uses: actions/cache@v5
+        with:
+          path: .cache
+          key: v2ray-cache-${{ matrix.app }}
+
+      - name: Get latest v2ray-plugin tag
+        id: v2ray
+        run: |
+          latest=$(curl -s https://api.github.com/repos/teddysun/v2ray-plugin/releases/latest | jq -r .tag_name)
+          echo "latest=$latest" >> $GITHUB_OUTPUT
+
+      - name: Get previous built tag
+        id: prev
+        run: |
+          if [ -f .cache/last_v2ray_tag ]; then
+            echo "previous=$(cat .cache/last_v2ray_tag)" >> $GITHUB_OUTPUT
+          else
+            echo "previous=" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check if v2ray-plugin changed
+        id: check
+        run: |
+          if [ "${{ steps.v2ray.outputs.latest }}" = "${{ steps.prev.outputs.previous }}" ]; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check upstream image digest
+        id: upstream
+        run: |
+          base_image="ghcr.io/shadowsocks/${{ matrix.app }}-rust:latest"
+          digest=$(docker manifest inspect $base_image 2>/dev/null | jq -r '.[0].digest // empty')
+          echo "digest=$digest" >> $GITHUB_OUTPUT
+          # Read previous digest from cache
+          if [ -f .cache/last_upstream_digest ]; then
+            prev_digest=$(cat .cache/last_upstream_digest)
+          else
+            prev_digest=""
+          fi
+          if [ "$digest" = "$prev_digest" ]; then
+            echo "upstream_changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "upstream_changed=true" >> $GITHUB_OUTPUT
+          fi
+
       - name: Log in to the Container registry
+        if: steps.check.outputs.changed == 'true' || steps.upstream.outputs.upstream_changed == 'true'
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
@@ -37,16 +87,27 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Extract metadata
+        if: steps.check.outputs.changed == 'true' || steps.upstream.outputs.upstream_changed == 'true'
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ github.actor }}/${{ matrix.app }}${{ env.IMAGE_SUFFIX }}
 
       - name: Build and push
+        if: steps.check.outputs.changed == 'true' || steps.upstream.outputs.upstream_changed == 'true'
         uses: docker/build-push-action@v6
         with:
           context: .
           push: true
           target: ${{ matrix.app }}
+          build-args: |
+            V2RAY_TAG=${{ steps.v2ray.outputs.latest }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Save latest build info
+        if: steps.check.outputs.changed == 'true' || steps.upstream.outputs.upstream_changed == 'true'
+        run: |
+          mkdir -p .cache
+          echo "${{ steps.v2ray.outputs.latest }}" > .cache/last_v2ray_tag
+          echo "${{ steps.upstream.outputs.digest }}" > .cache/last_upstream_digest

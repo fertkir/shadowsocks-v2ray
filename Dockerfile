@@ -1,14 +1,14 @@
 FROM ubuntu:22.04 AS build
 LABEL stage=builder-ssserver
 
+ARG V2RAY_TAG
+
 RUN apt-get update -y && \
     apt-get install -y --no-install-recommends wget jq ca-certificates
 
 RUN set -eux; \
     wget -qO release.json \
-        --header="Accept: application/vnd.github+json" \
-        https://api.github.com/repos/teddysun/v2ray-plugin/releases/latest; \
-    TAG=$(jq -r .tag_name release.json); \
+    https://api.github.com/repos/teddysun/v2ray-plugin/releases/tags/${V2RAY_TAG}; \
     ARCHIVE=$(jq -r '.assets[] | select(.name | test("linux-amd64.*\\.tar\\.gz$")) | .name' release.json); \
     URL=$(jq -r '.assets[] | select(.name == "'"$ARCHIVE"'") | .browser_download_url' release.json); \
     DIGEST=$(jq -r '.assets[] | select(.name == "'"$ARCHIVE"'") | .digest' release.json); \
