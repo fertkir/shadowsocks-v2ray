@@ -3,13 +3,13 @@ LABEL stage=builder-ssserver
 
 ARG V2RAY_TAG
 
-RUN --mount=type=secret,id=github_token && \
-    apt-get update -y && \
+RUN apt-get update -y && \
     apt-get install -y --no-install-recommends wget jq ca-certificates
 
-RUN set -eux; \
+RUN --mount=type=secret,id=github_token  \
+    set -eux; \
     wget -qO release.json \
-    -H "Authorization: Bearer $(cat /run/secrets/github_token)" \
+    --header "Authorization: Bearer $(cat /run/secrets/github_token)" \
     https://api.github.com/repos/teddysun/v2ray-plugin/releases/tags/${V2RAY_TAG}; \
     ARCHIVE=$(jq -r '.assets[] | select(.name | test("linux-amd64.*\\.tar\\.gz$")) | .name' release.json); \
     URL=$(jq -r '.assets[] | select(.name == "'"$ARCHIVE"'") | .browser_download_url' release.json); \
