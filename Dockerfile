@@ -1,25 +1,18 @@
 FROM ubuntu:24.04 AS build
 LABEL stage=builder-ssserver
 
-ARG V2RAY_TAG
+ARG V2RAY_VERSION="v5.41.0"
+ARG V2RAY_SHA256="e0b762776cbf7b02dcfe61efc5280cbfd65c7d46abbd845f4735486cc811c185"
 
 RUN apt-get update -y && \
-    apt-get install -y --no-install-recommends wget jq ca-certificates
+    apt-get install -y --no-install-recommends wget ca-certificates
 
-RUN --mount=type=secret,id=github_token  \
-    set -eux; \
-    TEMP_TOKEN=$(cat /run/secrets/github_token); \
-    wget -qO release.json \
-    --header "Authorization: Bearer $TEMP_TOKEN" \
-    https://api.github.com/repos/teddysun/v2ray-plugin/releases/tags/${V2RAY_TAG}; \
-    ARCHIVE=$(jq -r '.assets[] | select(.name | test("linux-amd64.*\\.tar\\.gz$")) | .name' release.json); \
-    URL=$(jq -r '.assets[] | select(.name == "'"$ARCHIVE"'") | .browser_download_url' release.json); \
-    DIGEST=$(jq -r '.assets[] | select(.name == "'"$ARCHIVE"'") | .digest' release.json); \
-    EXPECTED_SHA256="${DIGEST#sha256:}"; \
+RUN set -eux; \
+    ARCHIVE="v2ray-plugin-linux-amd64-${V2RAY_VERSION}.tar.gz"; \
+    URL="https://github.com/teddysun/v2ray-plugin/releases/download/${V2RAY_VERSION}/${ARCHIVE}"; \
     wget -qO "$ARCHIVE" "$URL"; \
-    echo "$EXPECTED_SHA256  $ARCHIVE" | sha256sum -c -; \
+    echo "${V2RAY_SHA256}  $ARCHIVE" | sha256sum -c -; \
     tar -xf "$ARCHIVE"; \
-    rm -f "$ARCHIVE" release.json; \
     mv v2ray* /usr/local/bin/v2ray-plugin; \
     chmod 0755 /usr/local/bin/v2ray-plugin
 

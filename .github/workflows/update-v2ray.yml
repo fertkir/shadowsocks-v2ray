@@ -1,0 +1,57 @@
+name: Check for v2ray updates
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 3 * * 1' # Every Monday at 3 AM
+
+jobs:
+  check-version:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Get Latest Release Info
+        id: v2ray
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          RELEASE_JSON=$(curl -s -H "Authorization: Bearer $GH_TOKEN" \
+            https://api.github.com/repos/teddysun/v2ray-plugin/releases/latest)
+          VERSION=$(echo "$RELEASE_JSON" | jq -r .tag_name)
+          DIGEST=$(echo "$RELEASE_JSON" | jq -r '.assets[] | select(.name | test("linux-amd64.*\\.tar\\.gz$")) | .digest')
+          SHA256="${DIGEST#sha256:}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "sha256=$SHA256" >> $GITHUB_OUTPUT
+
+      - name: Update Dockerfile
+        id: update_file
+        run: |
+          sed -i 's/ARG V2RAY_VERSION=.*/ARG V2RAY_VERSION="${{ steps.v2ray.outputs.version }}"/' Dockerfile
+          sed -i 's/ARG V2RAY_SHA256=.*/ARG V2RAY_SHA256="${{ steps.v2ray.outputs.sha256 }}"/' Dockerfile
+          
+          if git diff --exit-code Dockerfile; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Pull Request
+        if: steps.update_file.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore: update v2ray-plugin to ${{ steps.v2ray.outputs.version }}"
+          title: "Update v2ray-plugin to ${{ steps.v2ray.outputs.version }}"
+          body: |
+            New v2ray-plugin version detected.
+            - Version: `${{ steps.v2ray.outputs.version }}`
+            - SHA256: `${{ steps.v2ray.outputs.sha256 }}`
+          branch: update-v2ray-plugin
+          delete-branch: true
