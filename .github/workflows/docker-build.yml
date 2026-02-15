@@ -100,6 +100,8 @@ jobs:
           context: .
           push: true
           target: ${{ matrix.app }}
+          secrets: |
+            github_token=${{ secrets.GITHUB_TOKEN }}
           build-args: |
             V2RAY_TAG=${{ steps.v2ray.outputs.latest }}
           tags: ${{ steps.meta.outputs.tags }}
