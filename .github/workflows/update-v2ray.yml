@@ -53,5 +53,6 @@ jobs:
             New v2ray-plugin version detected.
             - Version: `${{ steps.v2ray.outputs.version }}`
             - SHA256: `${{ steps.v2ray.outputs.sha256 }}`
+            - Link: `https://github.com/teddysun/v2ray-plugin/releases`
           branch: update-v2ray-plugin
           delete-branch: true
